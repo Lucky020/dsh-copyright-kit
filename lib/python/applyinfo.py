@@ -245,6 +245,7 @@ def main() -> int:
     ap.add_argument("--exclude", action="append", default=[])
     ap.add_argument("--published", default="", help="首次发表日期；留空则填「待填写」")
     ap.add_argument("--short-name", default="", help="软件简称；留空则填「待填写」，系统不自动缩写")
+    ap.add_argument("--completed", default="", help="开发完成日期；留空则取 git 最后一次提交日期")
     args = ap.parse_args()
 
     root = Path(args.root).expanduser().resolve()
@@ -301,7 +302,7 @@ def main() -> int:
         "软件简称": args.short_name or "待填写",
         "版本号": args.version,
         "著作权人": args.developer,
-        "开发完成日期": git["last_commit"] or "待填写",
+        "开发完成日期": args.completed or git["last_commit"] or "待填写",
         "首次发表日期": args.published or "待填写",
         "开发方式": "独立开发",
         "权利取得方式": "原始取得",

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 — 2026-10-29
+
+### Added
+- 前端项目支持：`codeextract.py` 会解析 `model.js` 表单模型，导出「数据模型清单」与「核心表单字段明细」，
+  解决无后端仓库（低代码平台前端）导不出数据表的问题。
+- `copyright_apply_info` 新增 `--completed`，开发完成日期可覆盖 git 提交日期；`copyright_pack` 支持
+  `completed_date` / `published` / `short_name`。
+
 ## 0.6.2 — 2026-10-29
 
 ### Fixed

@@ -139,6 +139,41 @@ def scan_models(root: Path):
     return uniq
 
 
+MODEL_SERIALIZE_RE = re.compile(r"serialize\s*\(\s*\)\s*\{(.*?)\n\s*\}", re.S)
+MODEL_FIELD_RE = re.compile(r"^\s*([a-zA-Z_]\w*)\s*:", re.M)
+MODEL_SKIP_NAMES = {"template_id", "TEMPLATE_ID"}
+
+
+def scan_form_models(root: Path):
+    """前端项目常见的 model.js：一个文件对应一张表单/数据实体。"""
+    forms = []
+    for p in root.rglob("model.js"):
+        rel = p.relative_to(root)
+        if any(part.lower() in SKIP_DIRS for part in rel.parts[:-1]):
+            continue
+        try:
+            txt = p.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        m = MODEL_SERIALIZE_RE.search(txt)
+        block = m.group(1) if m else txt
+        fields = []
+        for f in MODEL_FIELD_RE.findall(block):
+            if f in MODEL_SKIP_NAMES or f in fields:
+                continue
+            fields.append(f)
+        if not fields:
+            continue
+        module = rel.parts[1] if len(rel.parts) > 2 else "根目录"
+        forms.append({
+            "file": rel.as_posix(),
+            "module": module,
+            "name": rel.parent.name,
+            "fields": fields,
+        })
+    return forms
+
+
 def dir_stats(root: Path):
     counter: Counter = Counter()
     lines_by_dir: Counter = Counter()
@@ -221,6 +256,32 @@ def main() -> int:
             ],
             "table": {"header": ["序号", "表名", "字段数", "主要字段"], "rows": rows},
         })
+
+    forms = scan_form_models(root)
+    if forms:
+        rows = [[f["module"], f["name"], str(len(f["fields"])), "、".join(f["fields"][:5]) + ("…" if len(f["fields"]) > 5 else "")]
+                for f in sorted(forms, key=lambda x: -len(x["fields"]))[:60]]
+        sections.append({
+            "heading": "数据模型清单",
+            "level": 2,
+            "paragraphs": [
+                f"系统前端定义了 {len(forms)} 个表单/数据实体模型，下表按字段数量列出其中 {len(rows)} 个，"
+                "字段名取自各模型的数据序列化定义，与低代码平台中的表结构一一对应。"
+            ],
+            "table": {"header": ["所属模块", "表单/实体", "字段数", "主要字段"], "rows": rows},
+        })
+        biggest = sorted(forms, key=lambda x: -len(x["fields"]))[:6]
+        detail = []
+        for f in biggest:
+            for name in f["fields"][:25]:
+                detail.append([f["name"], name])
+        if detail:
+            sections.append({
+                "heading": "核心表单字段明细",
+                "level": 2,
+                "paragraphs": ["下表列出字段数量最多的 6 个表单的字段名称，用于说明数据结构与业务对象的对应关系。"],
+                "table": {"header": ["表单/实体", "字段名"], "rows": detail[:150]},
+            })
 
     if models:
         grouped = defaultdict(lambda: [0, 0])
