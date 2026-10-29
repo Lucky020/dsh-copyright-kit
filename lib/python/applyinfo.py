@@ -16,11 +16,22 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+# 第三方静态资源：Cesium / UEditor / pdf.js 这类整包库，收进软著文档没有意义
+VENDOR_DIRS = {
+    "public", "static", "third-party", "third_party", "libs", "vendor", "assets",
+    "ueditor", "cesiumunminified", "documentation", "node_modules", "dist", "build",
+}
 SKIP_DIRS = {
     "node_modules", ".git", ".venv", "venv", "dist", "build", "__pycache__",
     ".pytest_cache", ".ruff_cache", ".uv-cache", ".idea", ".vscode", "coverage",
     "vendor", "target", ".next", ".cache", ".mypy_cache", ".tox", "site-packages",
 }
+LOCK_NAMES = {
+    "pnpm-lock.yaml", "package-lock.json", "yarn.lock", "npm-shrinkwrap.json",
+    "composer.lock", "poetry.lock", "uv.lock", "cargo.lock", "go.sum",
+    "pnpm-workspace.yaml",
+}
+MAX_FILE_BYTES = 1024 * 1024
 BINARY_SUFFIX = {
     ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".pdf", ".zip", ".tar", ".gz",
     ".woff", ".woff2", ".ttf", ".mp4", ".mp3", ".map", ".pyc", ".so", ".dll",
@@ -69,24 +80,33 @@ DOMAIN_HINTS = [
 ]
 
 
-def walk(root: Path):
+def walk(root: Path, excludes: tuple[str, ...] = ()):
     for p in root.rglob("*"):
         if not p.is_file():
             continue
         rel = p.relative_to(root)
-        if any(part in SKIP_DIRS for part in rel.parts[:-1]):
+        if any(part.lower() in VENDOR_DIRS or part in SKIP_DIRS for part in rel.parts[:-1]):
+            continue
+        if any(ex and ex in rel.as_posix() for ex in excludes):
             continue
         if p.name.startswith("."):
             continue
         if p.suffix.lower() in BINARY_SUFFIX:
             continue
+        if p.name.lower() in LOCK_NAMES or ".min." in p.name.lower():
+            continue
+        try:
+            if p.stat().st_size > MAX_FILE_BYTES:
+                continue
+        except OSError:
+            continue
         yield p
 
 
-def scan_code(root: Path):
+def scan_code(root: Path, excludes: tuple[str, ...] = ()):
     by_lang: Counter = Counter()
     files = 0
-    for p in walk(root):
+    for p in walk(root, excludes):
         lang = LANG.get(p.suffix.lower())
         if not lang:
             continue
@@ -94,7 +114,10 @@ def scan_code(root: Path):
             text = p.read_text(encoding="utf-8", errors="ignore")
         except OSError:
             continue
-        n = sum(1 for line in text.splitlines() if line.strip())
+        raw = text.splitlines()
+        if raw and sum(len(x) for x in raw) / len(raw) > 200:
+            continue
+        n = sum(1 for line in raw if line.strip())
         if n == 0:
             continue
         by_lang[lang] += n
@@ -223,6 +246,7 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--domain")
     ap.add_argument("--developer", default="待填写")
+    ap.add_argument("--exclude", action="append", default=[])
     args = ap.parse_args()
 
     root = Path(args.root).expanduser().resolve()
@@ -231,7 +255,8 @@ def main() -> int:
         return 2
 
     spec = load_spec(args.spec)
-    by_lang, files = scan_code(root)
+    excludes = tuple(e for e in args.exclude if e)
+    by_lang, files = scan_code(root, excludes)
     manifests = read_manifests(root)
     git = git_info(root)
 

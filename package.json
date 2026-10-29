@@ -1,6 +1,6 @@
 {
   "name": "dsh-copyright-kit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "软著工坊：把代码仓库变成软件著作权登记材料（源程序鉴别材料 60 页 / 软件说明书排版）。Copyright registration kit for DeepSeek Harness.",
   "repository": {
     "type": "git",

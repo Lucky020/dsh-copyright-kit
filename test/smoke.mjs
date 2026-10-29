@@ -37,6 +37,7 @@ await test_source_doc()
 await test_manual()
 await test_screens()
 await test_apply_info()
+await test_pack()
 console.log('\n✓ smoke passed:', [...registered.keys()].join(', '))
 
 function test_registration() {
@@ -45,7 +46,10 @@ function test_registration() {
   apply(ctx)
   assert.deepEqual(
     [...registered.keys()].sort(),
-    ['copyright_apply_info', 'copyright_kit_status', 'copyright_manual', 'copyright_screens', 'copyright_source_doc'],
+    [
+      'copyright_apply_info', 'copyright_kit_status', 'copyright_manual',
+      'copyright_pack', 'copyright_screens', 'copyright_source_doc',
+    ],
   )
 }
 
@@ -165,6 +169,37 @@ async function test_apply_info() {
   assert.ok(md.includes('软件全称') && md.includes('某某公司'))
   assert.ok(md.includes('fastapi') || md.includes('FastAPI'), '应识别出 FastAPI')
   console.log('  apply_info ok:', result.source_lines, 'lines,', result.features, 'features')
+}
+
+async function test_pack() {
+  const dir = workdir()
+  const repo = path.join(dir, 'repo')
+  mkdirSync(path.join(repo, 'app'), { recursive: true })
+  writeFileSync(path.join(repo, 'app', 'main.py'), 'def run():\n    return 1\n')
+  const spec = {
+    software_name: '批量测试软件',
+    version: 'V1.0',
+    sections: [
+      { heading: '功能说明', level: 1 },
+      { heading: '订单管理', level: 2, paragraphs: ['订单创建。'] },
+    ],
+  }
+  const specPath = path.join(dir, 'spec.json')
+  writeFileSync(specPath, JSON.stringify(spec))
+  const manifestPath = path.join(dir, 'batch.json')
+  writeFileSync(manifestPath, JSON.stringify({
+    out_dir: path.join(dir, 'out'),
+    software: [{ name: '批量测试软件', root: repo, spec: specPath }],
+  }))
+  const result = await registered.get('copyright_pack').execute({ manifest_path: manifestPath })
+  assert.equal(result.count, 1)
+  assert.equal(result.ok_count, 1)
+  const item = result.items[0]
+  assert.ok(item.ok, item.error)
+  const kinds = item.files.map((f) => f.kind).sort()
+  assert.deepEqual(kinds, ['apply_info', 'manual', 'source_doc'])
+  assert.ok(existsSync(item.files.find((f) => f.kind === 'manual').path))
+  console.log('  pack ok:', item.files.length, 'files')
 }
 
 async function test_manual() {

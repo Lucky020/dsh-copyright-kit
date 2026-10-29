@@ -1,0 +1,34 @@
+{
+  "out_dir": "/Users/lucky/Public/stu/dsh-copyright-kit/demo/out",
+  "defaults": {
+    "version": "V1.0",
+    "developer": "内蒙古XX科技有限公司"
+  },
+  "software": [
+    {
+      "name": "设备管理系统软件",
+      "root": "/Users/lucky/公司项目/donghuan",
+      "exclude": [
+        "frontend",
+        "docker",
+        "docs",
+        "alembic"
+      ],
+      "spec": "/Users/lucky/Public/stu/dsh-copyright-kit/demo/spec.json",
+      "screens": "/Users/lucky/Public/stu/dsh-copyright-kit/demo/screens.json",
+      "domain": "工业设备运行与维护管理"
+    },
+    {
+      "name": "智慧热网系统软件",
+      "root": "/Users/lucky/公司项目/religuanxian-frontend",
+      "exclude": [
+        "dist",
+        "node_modules",
+        "public"
+      ],
+      "spec": "/Users/lucky/Public/stu/dsh-copyright-kit/demo/systems/heating/spec.json",
+      "screens": "/Users/lucky/Public/stu/dsh-copyright-kit/demo/systems/heating/screens.json",
+      "domain": "供热管网运行管理"
+    }
+  ]
+}

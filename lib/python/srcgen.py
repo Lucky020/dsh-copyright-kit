@@ -30,6 +30,11 @@ MAX_FILE_BYTES = 1024 * 1024
 LINE_SPACING_PT = 11.5     # 每页可容 ≈63 行，留安全余量
 FONT_SIZE_PT = 9
 
+# 第三方静态资源：Cesium / UEditor / pdf.js 这类整包库，收进软著文档没有意义
+VENDOR_DIRS = {
+    "public", "static", "third-party", "third_party", "libs", "vendor", "assets",
+    "ueditor", "cesiumunminified", "documentation", "node_modules", "dist", "build",
+}
 SKIP_DIRS = {
     "node_modules", ".git", ".venv", "venv", "dist", "build", "__pycache__",
     ".pytest_cache", ".ruff_cache", ".uv-cache", ".idea", ".vscode", "coverage",
@@ -39,6 +44,12 @@ SKIP_SUFFIX = {
     ".lock", ".log", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".pdf",
     ".zip", ".tar", ".gz", ".woff", ".woff2", ".ttf", ".mp4", ".mp3", ".map",
     ".pyc", ".so", ".dll", ".exe", ".bin", ".jar", ".class",
+}
+# 锁文件与自动生成的清单没有收录价值，且体量极大
+LOCK_NAMES = {
+    "pnpm-lock.yaml", "package-lock.json", "yarn.lock", "npm-shrinkwrap.json",
+    "composer.lock", "poetry.lock", "uv.lock", "cargo.lock", "go.sum",
+    "pnpm-workspace.yaml",
 }
 CODE_SUFFIX = {
     ".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".vue", ".java", ".kt",
@@ -66,9 +77,13 @@ def read_text(path: Path) -> str:
 
 def skipped(path: Path, root: Path, excludes: tuple[str, ...]) -> bool:
     rel = path.relative_to(root)
-    if any(part in SKIP_DIRS for part in rel.parts[:-1]):
+    if any(part.lower() in VENDOR_DIRS or part in SKIP_DIRS for part in rel.parts[:-1]):
+        return True
+    if any(part.lower() in VENDOR_DIRS or part in SKIP_DIRS for part in rel.parts):
         return True
     if path.name.startswith("."):
+        return True
+    if path.name.lower() in LOCK_NAMES or ".min." in path.name.lower():
         return True
     low = path.name.lower()
     if any(low.endswith(s) for s in SKIP_SUFFIX):
@@ -91,6 +106,10 @@ def collect(root: Path, excludes: tuple[str, ...]) -> tuple[list[str], list[str]
         except OSError:
             continue
         if not text.strip():
+            continue
+        # 压缩/生成的单行大文件：平均行长异常，收进软著文档没意义
+        raw_lines = text.splitlines()
+        if raw_lines and sum(len(x) for x in raw_lines) / len(raw_lines) > 200:
             continue
         rel = path.relative_to(root).as_posix()
         prefix = COMMENT_PREFIX.get(path.suffix.lower(), "//")

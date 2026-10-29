@@ -35,7 +35,7 @@ dsh plugin --profile web add link:/absolute/path/to/dsh-copyright-kit
 python3 -m pip install python-docx
 ```
 
-## 五个工具
+## 六个工具
 
 ### `copyright_source_doc` — 源程序鉴别材料
 
@@ -151,6 +151,40 @@ python3 -m pip install python-docx
 
 输出一份 Markdown 填报单，字段可逐项复制进软著在线申请表。框架与数据库识别按**词边界**匹配，不会把 `login` 认成 Go 的 Gin。
 
+### `copyright_pack` — 批量出件
+
+一份 manifest，多个软件各出一套：
+
+```json
+{
+  "out_dir": "/abs/软著材料",
+  "defaults": { "version": "V1.0", "developer": "某某公司" },
+  "software": [
+    { "name": "设备管理系统软件", "root": "/abs/donghuan",
+      "exclude": ["frontend", "docker"],
+      "spec": "/abs/device/spec.json",
+      "screens": "/abs/device/screens.json" },
+    { "name": "智慧热网系统软件", "root": "/abs/religuanxian-frontend",
+      "spec": "/abs/heating/spec.json",
+      "screens": "/abs/heating/screens.json" }
+  ]
+}
+```
+
+每个软件输出一个目录：
+
+```
+<out_dir>/<软件名>/
+├── <软件名>_V1.0_源程序.docx
+├── <软件名>_V1.0_说明书.docx
+├── <软件名>_申请表信息.md
+└── screens/*.png
+```
+
+说明书里**没写 `image` 的章节，会按「章节标题 === 截图标题」自动挂图**，不用手工填路径（`injected` 会告诉你挂了几张）。单件失败不影响其它件，最后给出成功/失败清单。
+
+实测两个系统（设备管理 + 智能热网）批量跑完 **46 秒**。
+
 ### `copyright_kit_status` — 环境自检
 
 生成失败时先跑它：检查 python3、python-docx、两个脚本是否存在。
@@ -178,7 +212,7 @@ npm pack --dry-run     # 只应包含 lib/、cordis.patch.yml、README、CHANGEL
 - 源程序文档的 60 页是**构造出来的**：每页 50 段、行距固定 11.5pt（50 × 11.5 = 575pt，小于可用 728pt），每页首段带「段前分页」。所以页数与每页行数不依赖渲染器。
 - 说明书分页随内容流动，不保证每页恰好 30 行（1.5 倍行距下约 32 行）。
 - 截图里的数据是**示例数据**，提交前请按真实项目改一遍字段与数值——软著审查看的是界面与功能是否真实对应，不是数字好不好看。
-- 截图按 1600×1000 固定视口渲染，比这更宽的表格会被压窄；表格列多时拆成两屏更稳。
+- `copyright_apply_info` 的 `exclude` 要与 `copyright_source_doc` 一致，否则「源程序量」会和实际提交的源程序文档对不上。\n- 截图按 1600×1000 固定视口渲染，比这更宽的表格会被压窄；表格列多时拆成两屏更稳。
 - 源程序按文件路径排序抽取；如需特定顺序，先用 `exclude` 收窄范围。
 
 ## 路线
@@ -186,7 +220,7 @@ npm pack --dry-run     # 只应包含 lib/、cordis.patch.yml、README、CHANGEL
 - **P0（已完成）** 源程序文档 + 说明书排版
 - **P1（已完成）** 五屏界面截图：一套壳 + 7 种内容块 → headless Chrome 出 2 倍 PNG，路径直接喂给 `copyright_manual`
 - **P2（已完成）** 申请表字段推导：源程序量、语言、框架、数据库、完成日期、功能模块、300 字简介草稿
-- **P3** 一仓多软件、批量件、合规自检报告
+- **P3（已完成）** 批量出件 `copyright_pack`：一份 manifest 跑多个软件，说明书按标题自动挂图
 
 ## 许可
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 — 2026-10-29
+
+### Added
+- `copyright_pack`：批量出件。一份 manifest 为多个软件各生成一套材料（源程序 + 截图 + 说明书 + 申请表），
+  说明书按「章节标题 === 截图标题」自动挂图，单件失败不影响其它件。
+
+### Fixed
+- 源程序量与源程序文档口径不一致：`copyright_apply_info` 新增 `exclude` 参数，与 `copyright_source_doc` 对齐。
+- 收录范围误抓第三方静态资源（Cesium、UEditor、pdf.js）与锁文件（`pnpm-lock.yaml` 等），
+  导致源程序量与文档内容虚高。现在按目录名、`.min.`、平均行长、单文件大小四道规则过滤。
+- 循环依赖：python 执行器抽到 `lib/pyrun.js`。
+
 ## 0.2.0 — 2026-10-29
 
 ### Added
