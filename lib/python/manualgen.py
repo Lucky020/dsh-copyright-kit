@@ -257,6 +257,21 @@ def add_cover(doc, name: str, version: str, developer: str, date_text: str) -> N
     ver.paragraph_format.space_after = Pt(0)
     set_east_asian(ver.add_run(f"（{version}）"), "宋体", 15)
 
+    # 标题下的装饰横线
+    line = doc.add_paragraph()
+    line.paragraph_format.first_line_indent = Pt(0)
+    line.paragraph_format.space_before = Pt(16)
+    line.paragraph_format.space_after = Pt(0)
+    ppr = line._p.get_or_add_pPr()
+    pbdr = OxmlElement("w:pBdr")
+    bottom = OxmlElement("w:bottom")
+    bottom.set(qn("w:val"), "single")
+    bottom.set(qn("w:sz"), "8")
+    bottom.set(qn("w:space"), "1")
+    bottom.set(qn("w:color"), "333333")
+    pbdr.append(bottom)
+    ppr.append(pbdr)
+
     for _ in range(8):
         p = doc.add_paragraph()
         p.paragraph_format.space_after = Pt(0)

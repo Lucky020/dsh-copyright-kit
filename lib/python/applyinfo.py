@@ -273,7 +273,8 @@ def main() -> int:
 
     domain = args.domain or guess_domain(args.name, spec, headings)
     stack = frameworks[:3] or langs[:2]
-    summary = build_summary(args.name, domain, features, stack)
+    # 说明书里写了功能简介就用它（由人/agent 依据真实功能写），否则退回模板草稿
+    summary = str(spec.get("summary") or "").strip() or build_summary(args.name, domain, features, stack)
 
     warnings: list[str] = []
     if not spec:
@@ -352,7 +353,11 @@ def main() -> int:
         tech_points.append(f"数据存储使用 {'、'.join(dbs)}。")
     if git["last_commit"]:
         tech_points.append(f"源码规模约 {total_lines} 行，{files} 个源文件，git 提交 {git['commits']} 次。")
-    tech_points.append("按角色划分权限与数据范围，业务数据统一主数据管理。")
+    custom_points = [str(x).strip() for x in (spec.get("tech_points") or []) if str(x).strip()]
+    if custom_points:
+        tech_points.extend(custom_points)
+    else:
+        tech_points.append("按角色划分权限与数据范围，业务数据统一主数据管理。")
     lines += [f"{i + 1}. {t}" for i, t in enumerate(tech_points)]
 
     lines += ["", "## 四、检出依据", ""]

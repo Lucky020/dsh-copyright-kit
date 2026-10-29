@@ -148,7 +148,7 @@ python3 -m pip install python-docx
 | 开发框架 / 数据库 | 解析 `requirements.txt`、`package.json`、`pom.xml`、`go.mod`、`Dockerfile` 等 |
 | 开发完成日期 | git 最后一次提交日期 |
 | 面向领域 / 功能模块 | 说明书 spec 的章节 + 名称关键词 |
-| 功能简介（≤300 字）/ 技术特点 | 由模块名与依赖栈拼成**草稿**，需人工改写 |
+| 功能简介（≤300 字）/ 技术特点 | spec 里写了 `summary` / `tech_points` 就用它；否则按模块名与依赖栈拼草稿 |
 
 输出一份 Markdown 填报单，字段可逐项复制进软著在线申请表。框架与数据库识别按**词边界**匹配，不会把 `login` 认成 Go 的 Gin。
 

@@ -23,7 +23,7 @@ SKIP_DIRS = {
     "public", "static", "third-party", "third_party", "libs", "vendor", "assets",
     "ueditor", "cesiumunminified", "documentation",
 }
-MAX_INTERFACES = 60
+DEFAULT_MAX_ROUTES = 120
 MAX_MODELS = 40
 
 ROUTE_RE = re.compile(
@@ -166,6 +166,7 @@ def main() -> int:
     ap.add_argument("--root", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--title", default="附录")
+    ap.add_argument("--max-routes", type=int, default=DEFAULT_MAX_ROUTES)
     args = ap.parse_args()
 
     root = Path(args.root).expanduser().resolve()
@@ -195,7 +196,7 @@ def main() -> int:
 
     if routes:
         rows = []
-        for i, r in enumerate(routes[:MAX_INTERFACES], start=1):
+        for i, r in enumerate(routes[:max(1, args.max_routes)], start=1):
             rows.append([str(i), r["method"], r["path"], r["desc"][:40]])
         sections.append({
             "heading": "业务接口清单",
@@ -219,6 +220,20 @@ def main() -> int:
                 f"系统核心数据表共 {len(models)} 张，下表列出表名、字段数量与主要字段，表结构由代码中的模型定义导出。"
             ],
             "table": {"header": ["序号", "表名", "字段数", "主要字段"], "rows": rows},
+        })
+
+    if models:
+        grouped = defaultdict(lambda: [0, 0])
+        for m in models:
+            top = m["file"].split("/")[0] if "/" in m["file"] else "根目录"
+            grouped[top][0] += 1
+            grouped[top][1] += len(m["fields"])
+        rows = [[k, str(v[0]), str(v[1])] for k, v in sorted(grouped.items(), key=lambda kv: -kv[1][0])]
+        sections.append({
+            "heading": "数据表按模块分布",
+            "level": 2,
+            "paragraphs": ["下表按代码目录统计数据表数量与字段总量，用于说明数据模型在各业务模块中的分布。"],
+            "table": {"header": ["代码目录", "表数量", "字段总量"], "rows": rows},
         })
 
     if not sections:
