@@ -2,6 +2,18 @@
   "name": "dsh-copyright-kit",
   "version": "0.2.0",
   "description": "软著工坊：把代码仓库变成软件著作权登记材料（源程序鉴别材料 60 页 / 软件说明书排版）。Copyright registration kit for DeepSeek Harness.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lucky020/dsh-copyright-kit.git"
+  },
+  "homepage": "https://github.com/Lucky020/dsh-copyright-kit#readme",
+  "bugs": {
+    "url": "https://github.com/Lucky020/dsh-copyright-kit/issues"
+  },
+  "author": "Lucky020",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "lib/index.js",
   "exports": {

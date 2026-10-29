@@ -146,6 +146,23 @@ python3 -m pip install python-docx
 
 生成失败时先跑它：检查 python3、python-docx、两个脚本是否存在。
 
+## 发布到 npm（维护者）
+
+> 注意：本机 `~/.npmrc` 里是 `registry.npm.taobao.org`（已废弃的镜像），登录和发布都要显式指定官方源。
+
+```bash
+npm login --registry=https://registry.npmjs.org/
+npm publish --registry=https://registry.npmjs.org/
+```
+
+npm 默认要求 2FA，发布会索要一次性验证码；也可以用带 Publish 权限的 Granular Token 免 OTP。
+
+发布前自查：
+
+```bash
+npm pack --dry-run     # 只应包含 lib/、cordis.patch.yml、README、CHANGELOG、LICENSE
+```
+
 ## 已知边界
 
 - 右上角页码用的是 Word 右对齐制表位；macOS Quick Look 既**不认自定义制表位、也不分页**，所以在 Finder 预览里页码会挤在标题后面、目录与正文连成一片。Word / WPS 打开正常，不影响提交。
