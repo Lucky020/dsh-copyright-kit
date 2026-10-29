@@ -202,6 +202,8 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--title", default="附录")
     ap.add_argument("--max-routes", type=int, default=DEFAULT_MAX_ROUTES)
+    ap.add_argument("--model-detail-forms", type=int, default=0,
+                    help="输出字段明细的表单数量；0 表示不输出（默认）")
     args = ap.parse_args()
 
     root = Path(args.root).expanduser().resolve()
@@ -259,7 +261,7 @@ def main() -> int:
 
     forms = scan_form_models(root)
     if forms:
-        rows = [[f["module"], f["name"], str(len(f["fields"])), "、".join(f["fields"][:5]) + ("…" if len(f["fields"]) > 5 else "")]
+        rows = [[f["module"], f["name"], str(len(f["fields"]))]
                 for f in sorted(forms, key=lambda x: -len(x["fields"]))[:60]]
         sections.append({
             "heading": "数据模型清单",
@@ -268,12 +270,12 @@ def main() -> int:
                 f"系统前端定义了 {len(forms)} 个表单/数据实体模型，下表按字段数量列出其中 {len(rows)} 个，"
                 "字段名取自各模型的数据序列化定义，与低代码平台中的表结构一一对应。"
             ],
-            "table": {"header": ["所属模块", "表单/实体", "字段数", "主要字段"], "rows": rows},
+            "table": {"header": ["所属模块", "表单/实体", "字段数"], "rows": rows},
         })
-        biggest = sorted(forms, key=lambda x: -len(x["fields"]))[:6]
+        biggest = sorted(forms, key=lambda x: -len(x["fields"]))[:max(0, args.model_detail_forms)]
         detail = []
         for f in biggest:
-            for name in f["fields"][:25]:
+            for name in f["fields"][:12]:
                 detail.append([f["name"], name])
         if detail:
             sections.append({
