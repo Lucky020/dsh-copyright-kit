@@ -222,11 +222,6 @@ def collect_features(sections: list[dict]) -> list[str]:
             if (s.get("level") or 1) == 2 and str(s.get("heading") or "").strip() not in DOC_HEADINGS]
 
 
-def short_name(name: str) -> str:
-    s = re.sub(r"(软件|系统|平台|应用|管理系统|软件系统)$", "", name).strip()
-    return s or name
-
-
 def build_summary(name: str, domain: str, features: list[str], stack: list[str]) -> str:
     mods = "、".join(features[:5]) if features else "基础数据管理与业务办理"
     tech = "、".join(stack[:3]) if stack else "B/S 架构"
@@ -249,6 +244,7 @@ def main() -> int:
     ap.add_argument("--developer", default="待填写")
     ap.add_argument("--exclude", action="append", default=[])
     ap.add_argument("--published", default="", help="首次发表日期；留空则填「待填写」")
+    ap.add_argument("--short-name", default="", help="软件简称；留空则填「待填写」，系统不自动缩写")
     args = ap.parse_args()
 
     root = Path(args.root).expanduser().resolve()
@@ -286,6 +282,8 @@ def main() -> int:
         warnings.append("仓库没有 git 历史，开发完成日期与源程序量需人工确认")
     if len(summary) > 300:
         warnings.append(f"功能简介草稿 {len(summary)} 字，超过 300 字上限，请压缩")
+    if not args.short_name:
+        warnings.append("软件简称未提供，已填「待填写」——系统不会自动缩写软件全称")
     if not args.published:
         warnings.append("首次发表日期未提供，已填「待填写」——未发表请注明「未发表」")
     if not frameworks:
@@ -299,7 +297,7 @@ def main() -> int:
 
     fields = {
         "软件全称": args.name,
-        "软件简称": short_name(args.name),
+        "软件简称": args.short_name or "待填写",
         "版本号": args.version,
         "著作权人": args.developer,
         "开发完成日期": git["last_commit"] or "待填写",
