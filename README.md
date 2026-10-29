@@ -8,12 +8,21 @@
 
 ## 安装
 
-```bash
-# 本地开发（link 安装）
-dsh plugin --profile web add link:/absolute/path/to/dsh-copyright-kit
+**从 GitHub 装（推荐）**
 
-# 装完重启 dsh web（server 端工具需要重启才注册）
+```bash
+dsh plugin --profile web add github:Lucky020/dsh-copyright-kit
 ```
+
+**本地开发（link 安装，改代码立刻生效，不用重新发版）**
+
+```bash
+dsh plugin --profile web add link:/absolute/path/to/dsh-copyright-kit
+```
+
+装完重启 `dsh web` —— server 端工具要重启才会注册。
+
+> 两种不要同时装：会重复注册同名工具，报 `already registered`。
 
 依赖：
 
