@@ -109,6 +109,38 @@ def setup(doc: Document, header_left: str) -> None:
     pf.first_line_indent = Pt(BODY_PT * 2)
 
 
+class Stats:
+    """按 Word 的排版密度估算页数，用于提醒「篇幅不足」。"""
+
+    CHARS_PER_LINE = 33
+    LINES_PER_PAGE = 30
+
+    def __init__(self) -> None:
+        self.chars = 0
+        self.paragraphs = 0
+        self.bullets = 0
+        self.numbered = 0
+        self.table_rows = 0
+        self.table_headers = 0
+        self.images = 0
+        self.h1 = self.h2 = self.h3 = 0
+
+    def lines(self) -> float:
+        return (
+            self.chars / self.CHARS_PER_LINE
+            + self.paragraphs * 0.32
+            + (self.bullets + self.numbered) * 0.8
+            + self.table_rows * 1.6
+            + self.table_headers * 1.2
+            + self.images * 14
+            + self.h1 * 2.2 + self.h2 * 1.8 + self.h3 * 1.6
+        )
+
+    def pages(self) -> int:
+        # +1 给目录/封面留一页
+        return max(1, round(self.lines() / self.LINES_PER_PAGE) + 1)
+
+
 class Numberer:
     def __init__(self) -> None:
         self.counters = [0, 0, 0]
@@ -146,6 +178,16 @@ def add_body(doc, text: str) -> None:
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     run = p.add_run(text)
+    set_east_asian(run, "宋体", BODY_PT)
+
+
+def add_numbered(doc, index: int, text: str) -> None:
+    p = doc.add_paragraph()
+    pf = p.paragraph_format
+    pf.first_line_indent = Pt(0)
+    pf.left_indent = Pt(BODY_PT * 2.4)
+    pf.space_after = Pt(3)
+    run = p.add_run(f"{index}. {text}")
     set_east_asian(run, "宋体", BODY_PT)
 
 
@@ -208,6 +250,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--spec", required=True, help="UTF-8 JSON 说明文件")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--append", help="追加的章节 JSON（例如 codeextract.py 生成的附录）")
     args = ap.parse_args()
 
     spec_path = Path(args.spec).expanduser().resolve()
@@ -216,6 +259,14 @@ def main() -> int:
     except (OSError, json.JSONDecodeError) as exc:
         print(f"bad spec: {exc}", file=sys.stderr)
         return 2
+
+    if args.append:
+        try:
+            extra = json.loads(Path(args.append).expanduser().read_text(encoding="utf-8"))
+            spec.setdefault("sections", []).extend(extra.get("sections") or [])
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"附录读取失败：{exc}", file=sys.stderr)
+            return 4
 
     name = spec.get("software_name") or "未命名软件"
     version = spec.get("version") or "V1.0"
@@ -237,6 +288,7 @@ def main() -> int:
         tp.paragraph_format.first_line_indent = Pt(0)
         toc_field(tp)
 
+    stats = Stats()
     numberer = Numberer()
     first_heading = bool(spec.get("toc", True))
     images = 0
@@ -249,25 +301,47 @@ def main() -> int:
         if heading:
             add_heading(doc, heading, level, numberer.next(level), page_break_before=first_heading)
             first_heading = False
+            if level == 1:
+                stats.h1 += 1
+            elif level == 2:
+                stats.h2 += 1
+            else:
+                stats.h3 += 1
         for para in section.get("paragraphs") or []:
             text = str(para).strip()
             if text:
                 add_body(doc, text)
                 chars += len(text)
-        for bullet in section.get("bullets") or []:
+                stats.chars += len(text)
+                stats.paragraphs += 1
+        for i, bullet in enumerate(section.get("bullets") or [], start=1):
             text = str(bullet).strip()
             if text:
                 add_bullet(doc, text)
                 chars += len(text)
+                stats.chars += len(text)
+                stats.bullets += 1
+
+        for i, step in enumerate(section.get("steps") or [], start=1):
+            text = str(step).strip()
+            if text:
+                add_numbered(doc, i, text)
+                chars += len(text)
+                stats.chars += len(text)
+                stats.numbered += 1
         table_spec = section.get("table")
         if isinstance(table_spec, dict):
-            tables += add_table(doc, table_spec)
+            rows_added = add_table(doc, table_spec)
+            tables += rows_added
+            stats.table_rows += len(table_spec.get("rows") or [])
+            stats.table_headers += 1 if table_spec.get("header") else 0
         image = section.get("image")
         if image:
             image_index += 1
             caption = section.get("caption") or f"图 {image_index}  {section.get('heading', '')}"
             if add_image(doc, Path(image).expanduser(), caption, image_index):
                 images += 1
+                stats.images += 1
 
     doc.core_properties.title = f"{name} {version} 软件说明书"
     doc.core_properties.subject = "计算机软件著作权登记 · 文档鉴别材料"
@@ -275,7 +349,9 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     doc.save(out)
 
+    pages = stats.pages()
     print(f"sections : {len(sections)}")
+    print(f"est pages: {pages}  (字 {stats.chars} / 表行 {stats.table_rows} / 图 {stats.images})")
     print(f"images   : {images}")
     print(f"chars    : {chars}")
     print(f"out      : {out}")
@@ -288,6 +364,8 @@ def main() -> int:
         "images": images,
         "tables": tables,
         "chars": chars,
+        "est_pages": pages,
+        "thin": pages < 20,
     }, ensure_ascii=False))
     return 0
 

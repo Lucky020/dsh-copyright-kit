@@ -1,0 +1,658 @@
+{
+  "sections": [
+    {
+      "heading": "源代码组织",
+      "level": 2,
+      "paragraphs": [
+        "本系统源代码按目录组织，主要目录的文件数与有效代码行数如下表。统计范围为 donghuan 仓库内的业务源代码，不含依赖包与第三方静态资源。"
+      ],
+      "table": {
+        "header": [
+          "目录",
+          "文件数",
+          "有效行数"
+        ],
+        "rows": [
+          [
+            "app",
+            "218",
+            "23566"
+          ],
+          [
+            "frontend",
+            "76",
+            "9044"
+          ],
+          [
+            "tests",
+            "73",
+            "8362"
+          ],
+          [
+            "scripts",
+            "27",
+            "5863"
+          ],
+          [
+            "alembic",
+            "38",
+            "1992"
+          ],
+          [
+            "poc",
+            "19",
+            "1297"
+          ],
+          [
+            "tools",
+            "2",
+            "748"
+          ],
+          [
+            ".",
+            "3",
+            "262"
+          ]
+        ]
+      }
+    },
+    {
+      "heading": "业务接口清单",
+      "level": 2,
+      "paragraphs": [
+        "系统对外提供 HTTP 接口共 101 个（去重后计数），下表列出其中 60 个，包含请求方法、路径与业务含义。接口说明取自代码中的函数注释。"
+      ],
+      "table": {
+        "header": [
+          "序号",
+          "方法",
+          "接口路径",
+          "说明"
+        ],
+        "rows": [
+          [
+            "1",
+            "GET",
+            "/",
+            "root"
+          ],
+          [
+            "2",
+            "GET",
+            "/healthz",
+            "存活/就绪探针（P5-4）：无鉴权、供 compose healthcheck "
+          ],
+          [
+            "3",
+            "GET",
+            "/{id}/usage",
+            "谁在用这个物模型（G7 反向引用，只读）。"
+          ],
+          [
+            "4",
+            "GET",
+            "/properties/{id}/usage",
+            "改这个属性会波及什么（G7，只读）——编辑/删除前的影响面。"
+          ],
+          [
+            "5",
+            "GET",
+            "/templates",
+            "内置物模型模板列表（UPS/精密空调/PDU/温湿度）。"
+          ],
+          [
+            "6",
+            "POST",
+            "/templates/{id}/instantiate",
+            "一键实例化模板为本租户物模型（含属性/事件）。同 key 已存在 → 409。"
+          ],
+          [
+            "7",
+            "GET",
+            "/import-points/template",
+            "下载点位导入模板 xlsx（表头 + 示例行）。"
+          ],
+          [
+            "8",
+            "POST",
+            "/import-points",
+            "import points xlsx"
+          ],
+          [
+            "9",
+            "POST",
+            "/",
+            "create thing model"
+          ],
+          [
+            "10",
+            "GET",
+            "/{id}",
+            "根据 ID 获取物模型。"
+          ],
+          [
+            "11",
+            "GET",
+            "/{id}/detail",
+            "获取物模型详情，含 properties/events/services 嵌套。"
+          ],
+          [
+            "12",
+            "PUT",
+            "/{id}",
+            "update thing model"
+          ],
+          [
+            "13",
+            "DELETE",
+            "/{id}",
+            "删除物模型（级联删除属性/事件/服务）。仍有设备在用时拒绝（G7）。"
+          ],
+          [
+            "14",
+            "POST",
+            "/{id}/properties",
+            "create thing property"
+          ],
+          [
+            "15",
+            "GET",
+            "/{id}/properties",
+            "获取物模型下的属性列表。"
+          ],
+          [
+            "16",
+            "PUT",
+            "/properties/{id}",
+            "update thing property"
+          ],
+          [
+            "17",
+            "DELETE",
+            "/properties/{id}",
+            "删除属性。被点位/规则引用时拒绝（G7），而不是撞 FK 500。"
+          ],
+          [
+            "18",
+            "POST",
+            "/{id}/events",
+            "create thing event"
+          ],
+          [
+            "19",
+            "GET",
+            "/{id}/events",
+            "获取物模型下的事件列表。"
+          ],
+          [
+            "20",
+            "PUT",
+            "/events/{id}",
+            "update thing event"
+          ],
+          [
+            "21",
+            "DELETE",
+            "/events/{id}",
+            "删除事件。"
+          ],
+          [
+            "22",
+            "POST",
+            "/{id}/services",
+            "create thing service"
+          ],
+          [
+            "23",
+            "GET",
+            "/{id}/services",
+            "获取物模型下的服务列表。"
+          ],
+          [
+            "24",
+            "PUT",
+            "/services/{id}",
+            "update thing service"
+          ],
+          [
+            "25",
+            "DELETE",
+            "/services/{id}",
+            "删除服务。"
+          ],
+          [
+            "26",
+            "GET",
+            "/ops",
+            "运维维度：网关在线/配置生效/时钟偏移 · 管道积压 · 压缩健康 · 通知通道"
+          ],
+          [
+            "27",
+            "GET",
+            "/security",
+            "安全维度：认证异常（EMQX authn/authz 拒、登录失败）· 审计 2"
+          ],
+          [
+            "28",
+            "POST",
+            "/avatar",
+            "upload avatar"
+          ],
+          [
+            "29",
+            "POST",
+            "/document",
+            "upload document"
+          ],
+          [
+            "30",
+            "POST",
+            "/file",
+            "upload file"
+          ],
+          [
+            "31",
+            "POST",
+            "/image",
+            "upload image"
+          ],
+          [
+            "32",
+            "POST",
+            "/model",
+            "3D 机房模型上传。仅放行 .glb/.gltf，上限 50MB，按租户分目录，"
+          ],
+          [
+            "33",
+            "GET",
+            "/models",
+            "list models"
+          ],
+          [
+            "34",
+            "GET",
+            "/images",
+            "list images"
+          ],
+          [
+            "35",
+            "GET",
+            "/download/{id}",
+            "带租户校验的文件下载。本地存储直接回源字节；OSS/S3 302 到其访问 UR"
+          ],
+          [
+            "36",
+            "DELETE",
+            "/models/{id}",
+            "删除模型：先删存储文件（失败不阻断删库），再删 uploads 记录。"
+          ],
+          [
+            "37",
+            "PUT",
+            "/{id}/roles",
+            "set user roles"
+          ],
+          [
+            "38",
+            "GET",
+            "/me",
+            "获取当前用户信息 + 有效权限码（供前端门控菜单/路由/动作按钮）。"
+          ],
+          [
+            "39",
+            "POST",
+            "/{id}/revoke-sessions",
+            "revoke user sessions"
+          ],
+          [
+            "40",
+            "POST",
+            "/{id}/kiosk-session",
+            "issue user kiosk session"
+          ],
+          [
+            "41",
+            "POST",
+            "/{id}/configs",
+            "create gateway config"
+          ],
+          [
+            "42",
+            "POST",
+            "/{id}/configs/generate",
+            "generate gateway config"
+          ],
+          [
+            "43",
+            "GET",
+            "/{id}/configs",
+            "配置版本列表（新版本在前，不含点表内容）。"
+          ],
+          [
+            "44",
+            "GET",
+            "/{id}/configs/{id}",
+            "read gateway config"
+          ],
+          [
+            "45",
+            "GET",
+            "/{id}/configs/{id}/drift",
+            "read gateway config drift"
+          ],
+          [
+            "46",
+            "POST",
+            "/{id}/configs/{id}/publish",
+            "publish gateway config version"
+          ],
+          [
+            "47",
+            "POST",
+            "/{id}/ota",
+            "push gateway ota"
+          ],
+          [
+            "48",
+            "GET",
+            "/lazy",
+            "read base trees lazy"
+          ],
+          [
+            "49",
+            "POST",
+            "/move",
+            "move base tree"
+          ],
+          [
+            "50",
+            "GET",
+            "/{id}/path",
+            "get base tree path"
+          ],
+          [
+            "51",
+            "GET",
+            "/points/{id}/latest",
+            "read point latest"
+          ],
+          [
+            "52",
+            "GET",
+            "/devices/{id}/latest",
+            "read device latest"
+          ],
+          [
+            "53",
+            "GET",
+            "/points/{id}/history",
+            "read point history"
+          ],
+          [
+            "54",
+            "GET",
+            "/aggregate-preview",
+            "aggregate preview"
+          ],
+          [
+            "55",
+            "GET",
+            "/status",
+            "本机授权状态（免鉴权）。前端启动时探这个，locked 则跳激活页。"
+          ],
+          [
+            "56",
+            "GET",
+            "/notice",
+            "到期 / 宽限期 / 配额提示条的数据源（登录即可，不挂菜单门控）。"
+          ],
+          [
+            "57",
+            "GET",
+            "/{id}/credentials",
+            "重取 MQTT 接入凭证（派生密钥随时可重派生，服务端不存）。"
+          ],
+          [
+            "58",
+            "PATCH",
+            "/{id}",
+            "update gateway"
+          ],
+          [
+            "59",
+            "POST",
+            "/spaces",
+            "create space"
+          ],
+          [
+            "60",
+            "GET",
+            "/spaces",
+            "列表：给 parent_id 取其直接子节点，否则取根节点（parent_id "
+          ]
+        ]
+      }
+    },
+    {
+      "heading": "数据表清单",
+      "level": 2,
+      "paragraphs": [
+        "系统核心数据表共 34 张，下表列出表名、字段数量与主要字段，表结构由代码中的模型定义导出。"
+      ],
+      "table": {
+        "header": [
+          "序号",
+          "表名",
+          "字段数",
+          "主要字段"
+        ],
+        "rows": [
+          [
+            "1",
+            "mptt_space",
+            "5",
+            "id、tenant_id、name、kind、depth_hint"
+          ],
+          [
+            "2",
+            "users",
+            "11",
+            "id、username、email、full_name、hashed_password、is_active、is_superuser、is_sys_superuser…"
+          ],
+          [
+            "3",
+            "gateways",
+            "7",
+            "gw_id、name、is_enabled、last_seen_at、desired_config_version、reported_config_version、clock_offset_s"
+          ],
+          [
+            "4",
+            "commands",
+            "18",
+            "device_id、gateway_id、seq_no、kind、point_id、service_id、params、target_value…"
+          ],
+          [
+            "5",
+            "operation_logs",
+            "13",
+            "created_at、tenant_id、operator_id、operator_name、action、table_name、object_id、object_repr…"
+          ],
+          [
+            "6",
+            "diagrams",
+            "4",
+            "name、kind、description、spec"
+          ],
+          [
+            "7",
+            "tenants",
+            "4",
+            "id、name、expire_at、is_active"
+          ],
+          [
+            "8",
+            "uploads",
+            "15",
+            "original_name、mime、size、md5、purpose、storage_backend、storage_path、storage_bucket…"
+          ],
+          [
+            "9",
+            "spaces",
+            "18",
+            "name、space_type、path、parent_id、name、sn、model_id、space_id…"
+          ],
+          [
+            "10",
+            "devices",
+            "15",
+            "name、sn、model_id、space_id、gateway_id、addr_offset、device_id、property_id…"
+          ],
+          [
+            "11",
+            "device_points",
+            "9",
+            "device_id、property_id、display_key、addr、collect_freq、from_device_id、to_device_id、edge_role…"
+          ],
+          [
+            "12",
+            "power_topology",
+            "4",
+            "from_device_id、to_device_id、edge_role、is_active"
+          ],
+          [
+            "13",
+            "permissions",
+            "4",
+            "id、code、description、tenant_id"
+          ],
+          [
+            "14",
+            "api_keys",
+            "10",
+            "name、key_hash、prefix、is_enabled、last_used_at、name、url、secret…"
+          ],
+          [
+            "15",
+            "webhooks",
+            "5",
+            "name、url、secret、events、is_enabled"
+          ],
+          [
+            "16",
+            "alarms",
+            "24",
+            "device_id、point_id、rule_id、severity、status、dedup_key、first_ts、last_ts…"
+          ],
+          [
+            "17",
+            "notify_records",
+            "12",
+            "alarm_id、channel、target、status、retry_count、next_retry_at、sent_at、last_error…"
+          ],
+          [
+            "18",
+            "alarm_actions",
+            "4",
+            "alarm_id、action、operator_id、comment"
+          ],
+          [
+            "19",
+            "telemetry_raw",
+            "6",
+            "ts、tenant_id、point_id、value_num、value_text、quality"
+          ],
+          [
+            "20",
+            "base_trees",
+            "14",
+            "id、tenant_id、name、description、arguments、icon、field_01、field_02…"
+          ],
+          [
+            "21",
+            "gateway_configs",
+            "13",
+            "gateway_id、version、points、devices、point_count、drivers、note、name…"
+          ],
+          [
+            "22",
+            "driver_packages",
+            "6",
+            "name、protocol、version、checksum、code、note"
+          ],
+          [
+            "23",
+            "roles",
+            "4",
+            "id、name、description、tenant_id"
+          ],
+          [
+            "24",
+            "instance_meta",
+            "13",
+            "install_id、machine_code、lic_id、subject、license_type、valid_from、valid_until、max_devices…"
+          ],
+          [
+            "25",
+            "activations",
+            "12",
+            "machine_code、lic_id、subject、license_type、valid_from、valid_until、max_devices、grace_days…"
+          ],
+          [
+            "26",
+            "rules",
+            "11",
+            "name、point_id、scope、device_id、target_property、rule_type、op、threshold…"
+          ],
+          [
+            "27",
+            "notify_routes",
+            "5",
+            "name、severity、channel、target、is_enabled"
+          ],
+          [
+            "28",
+            "thing_models",
+            "25",
+            "name、key、category、version、description、model_id、identifier、name…"
+          ],
+          [
+            "29",
+            "thing_properties",
+            "25",
+            "model_id、identifier、name、data_type、unit、read_write、scale、encoding…"
+          ],
+          [
+            "30",
+            "thing_events",
+            "10",
+            "model_id、identifier、name、severity、spec、model_id、identifier、name…"
+          ],
+          [
+            "31",
+            "thing_services",
+            "5",
+            "model_id、identifier、name、input_spec、is_high_risk"
+          ],
+          [
+            "32",
+            "data_scopes",
+            "2",
+            "user_id、space_id"
+          ],
+          [
+            "33",
+            "report_tasks",
+            "14",
+            "title、report_type、period、range_start、range_end、scope_point_ids、status、error…"
+          ],
+          [
+            "34",
+            "departments",
+            "5",
+            "id、name、description、tenant_id、parent_id"
+          ]
+        ]
+      }
+    }
+  ]
+}
