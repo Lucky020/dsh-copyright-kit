@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0 — 2026-10-29
+
+### Added
+- 说明书**封面页**：软件名称、版本文档类型、著作权人、日期；封面不显示页眉与页码（`different_first_page_header_footer`）。
+- spec 新增 `developer` / `date` / `cover` 字段，`copyright_pack` 会把 manifest 的 `developer` 自动注入。
+
+### Fixed
+- 表格固定布局 + 显式列宽 + `tblW`，避免 Word 把两列表压成 1:1。
+- `--append` 的附录包在「附录」一级章节下。
+- 源程序排序业务代码优先（`app/`、`src/` 在 `alembic/`、`scripts/` 之前）。
+- `applyinfo` 新增 `--published`；未提供时填「待填写」而不是猜「未发表」。
+
 ## 0.4.0 — 2026-10-29
 
 ### Added

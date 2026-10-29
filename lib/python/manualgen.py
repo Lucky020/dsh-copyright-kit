@@ -85,8 +85,11 @@ def toc_field(paragraph) -> None:
         run._r.append(node)
 
 
-def setup(doc: Document, header_left: str) -> None:
+def setup(doc: Document, header_left: str, hide_first_header: bool = False) -> None:
     sec = doc.sections[0]
+    if hide_first_header:
+        # 封面不显示页眉页码：首页页眉单独留空
+        sec.different_first_page_header_footer = True
     sec.page_width, sec.page_height = Cm(21.0), Cm(29.7)
     sec.top_margin = sec.bottom_margin = Cm(2.54)
     sec.left_margin = sec.right_margin = Cm(3.17)
@@ -230,6 +233,48 @@ COLUMN_RATIOS = {
 }
 
 
+def add_cover(doc, name: str, version: str, developer: str, date_text: str) -> None:
+    """封面：软件名称 + 版本号 + 文档类型 + 著作权人 + 日期。"""
+    for _ in range(5):
+        p = doc.add_paragraph()
+        p.paragraph_format.space_after = Pt(0)
+
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title.paragraph_format.first_line_indent = Pt(0)
+    title.paragraph_format.space_after = Pt(18)
+    set_east_asian(title.add_run(name), "黑体", 26, True)
+
+    kind = doc.add_paragraph()
+    kind.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    kind.paragraph_format.first_line_indent = Pt(0)
+    kind.paragraph_format.space_after = Pt(10)
+    set_east_asian(kind.add_run("软 件 说 明 书"), "黑体", 22, True)
+
+    ver = doc.add_paragraph()
+    ver.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    ver.paragraph_format.first_line_indent = Pt(0)
+    ver.paragraph_format.space_after = Pt(0)
+    set_east_asian(ver.add_run(f"（{version}）"), "宋体", 15)
+
+    for _ in range(8):
+        p = doc.add_paragraph()
+        p.paragraph_format.space_after = Pt(0)
+
+    if developer:
+        dev = doc.add_paragraph()
+        dev.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        dev.paragraph_format.first_line_indent = Pt(0)
+        dev.paragraph_format.space_after = Pt(8)
+        set_east_asian(dev.add_run(developer), "宋体", 16, True)
+
+    if date_text:
+        dt = doc.add_paragraph()
+        dt.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        dt.paragraph_format.first_line_indent = Pt(0)
+        set_east_asian(dt.add_run(date_text), "宋体", 14)
+
+
 def add_table(doc, spec: dict) -> int:
     header = spec.get("header") or []
     rows = spec.get("rows") or []
@@ -306,12 +351,19 @@ def main() -> int:
         return 3
 
     doc = Document()
-    setup(doc, f"{name}  {version}")
+    setup(doc, f"{name}  {version}", hide_first_header=bool(spec.get("cover", True)))
+
+    developer = str(spec.get("developer") or "").strip()
+    date_text = str(spec.get("date") or "").strip()
+    if spec.get("cover", True):
+        add_cover(doc, name, version, developer, date_text)
 
     if spec.get("toc", True):
         title = doc.add_paragraph()
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
         title.paragraph_format.first_line_indent = Pt(0)
+        if spec.get("cover", True):
+            title.paragraph_format.page_break_before = True
         run = title.add_run("目  录")
         set_east_asian(run, "黑体", 16, True)
         tp = doc.add_paragraph()
