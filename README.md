@@ -232,6 +232,8 @@ npm pack --dry-run     # 只应包含 lib/、cordis.patch.yml、README、CHANGEL
 
 需要页脚居中时，在 spec 里写 `"page_number": "bottom"`，或给 `copyright_source_doc` / `copyright_manual` 传 `--page-number bottom`。
 
+封面默认**带页码**（只显示页码、不显示软件名）；想按惯例让封面不编页码，写 `"cover_page_number": false`。
+
 ## 篇幅配方（目标 25–30 页）
 
 说明书页数几乎完全由内容密度决定。实测**每页约 1,000 字**，或 **1 张截图 ≈ 0.5 页**，或 **1 行表格 ≈ 1.6 行正文**。8 页的文档，通常只写了 2,000 字。

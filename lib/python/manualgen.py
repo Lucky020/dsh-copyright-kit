@@ -86,7 +86,7 @@ def toc_field(paragraph) -> None:
 
 
 def setup(doc: Document, header_left: str, hide_first_header: bool = False,
-          page_number: str = "bottom") -> None:
+          page_number: str = "top", cover_page_number: bool = True) -> None:
     sec = doc.sections[0]
     if hide_first_header:
         # 封面不显示页眉页码：首页页眉单独留空
@@ -100,6 +100,15 @@ def setup(doc: Document, header_left: str, hide_first_header: bool = False,
     hp.style = doc.styles["Normal"]
     hp.paragraph_format.tab_stops.clear_all()
     hp.paragraph_format.tab_stops.add_tab_stop(Cm(14.66), WD_TAB_ALIGNMENT.RIGHT)
+    if hide_first_header and cover_page_number:
+        # 封面保留页码（只有页码，不带软件名）：单独设置首页页眉
+        fh = sec.first_page_header.paragraphs[0]
+        fh.style = doc.styles["Normal"]
+        fh.paragraph_format.tab_stops.clear_all()
+        fh.paragraph_format.tab_stops.add_tab_stop(Cm(14.66), WD_TAB_ALIGNMENT.RIGHT)
+        fh.add_run("\t")
+        page_field(fh, 10.5)
+
     if page_number == "bottom":
         # 页眉只放软件名与版本号，页码放到页脚居中
         run = hp.add_run(header_left)
@@ -382,7 +391,8 @@ def main() -> int:
     doc = Document()
     page_number = str(spec.get("page_number") or args.page_number or "top")
     setup(doc, f"{name}  {version}", hide_first_header=bool(spec.get("cover", True)),
-          page_number=page_number)
+          page_number=page_number,
+          cover_page_number=bool(spec.get("cover_page_number", True)))
 
     developer = str(spec.get("developer") or "").strip()
     date_text = str(spec.get("date") or "").strip()
