@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>dsh-copyright-kit · social preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1280px; height: 640px; overflow: hidden;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background:
+      radial-gradient(900px 520px at 78% 18%, rgba(59,130,246,.28), transparent 62%),
+      radial-gradient(700px 420px at 6% 92%, rgba(16,185,129,.16), transparent 60%),
+      linear-gradient(135deg, #0a1626 0%, #12263f 52%, #0d1e33 100%);
+    color: #e8eef7; display: flex; align-items: center;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(148,163,184,.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148,163,184,.07) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(180deg, rgba(0,0,0,.85), rgba(0,0,0,.25));
+  }
+  .left { position: relative; width: 620px; padding: 0 0 0 68px; z-index: 2; }
+  .tag {
+    display: inline-block; font-size: 13px; letter-spacing: .12em; color: #7fb0f2;
+    border: 1px solid rgba(127,176,242,.38); border-radius: 999px; padding: 5px 13px; margin-bottom: 22px;
+  }
+  h1 { font-size: 62px; font-weight: 700; letter-spacing: .02em; line-height: 1.08; }
+  h1 span { color: #fff; }
+  .repo { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 17px; color: #8aa4c4; margin-top: 14px; letter-spacing: .02em; }
+  .desc { font-size: 18px; color: #c3d2e5; margin-top: 24px; line-height: 1.65; max-width: 520px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; max-width: 520px; }
+  .chip { font-size: 14px; color: #d7e4f5; background: rgba(148,178,214,.13); border: 1px solid rgba(148,178,214,.22); border-radius: 8px; padding: 7px 13px; }
+  .chip b { color: #6ee7b7; font-weight: 600; }
+  .shot { position: absolute; right: -60px; top: 84px; width: 780px; z-index: 1; }
+  .win {
+    border-radius: 14px; overflow: hidden; background: #0f172a;
+    box-shadow: 0 40px 90px rgba(2,8,20,.72), 0 0 0 1px rgba(148,178,214,.20);
+  }
+  .bar { height: 34px; background: #16233a; display: flex; align-items: center; gap: 7px; padding: 0 14px; }
+  .bar i { width: 10px; height: 10px; border-radius: 50%; background: #3b4a63; }
+  .bar span { margin-left: 10px; font-size: 12px; color: #6f86a6; font-family: ui-monospace, Menlo, monospace; }
+  .win img { display: block; width: 100%; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+
+  <div class="left">
+    <div class="tag">DEEPSEEK HARNESS PLUGIN</div>
+    <h1>软著<span>工坊</span></h1>
+    <div class="repo">dsh-copyright-kit</div>
+    <div class="desc">一个代码仓库 + 一个软件名，<br>直接产出软件著作权登记要交的全套材料。</div>
+    <div class="chips">
+      <div class="chip">源程序 <b>60 页</b></div>
+      <div class="chip">软件说明书</div>
+      <div class="chip">五屏界面截图</div>
+      <div class="chip">申请表推导</div>
+    </div>
+  </div>
+
+  <div class="shot">
+    <div class="win">
+      <div class="bar"><i></i><i></i><i></i><span>设备管理系统 · 运行总览</span></div>
+      <img src="file:///Users/lucky/Public/stu/dsh-copyright-kit/demo/screens/01-总览-运行总览.png" alt="">
+    </div>
+  </div>
+</body>
+</html>

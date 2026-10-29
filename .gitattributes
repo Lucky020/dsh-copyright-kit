@@ -1,0 +1,8 @@
+# 二进制产物：不要尝试文本 diff
+*.docx binary
+*.png  binary
+*.jpg  binary
+
+# 示例产物与设计稿不计入语言统计
+demo/     linguist-documentation
+branding/ linguist-documentation
