@@ -8,7 +8,13 @@
 
 ## 安装
 
-**从 GitHub 装（推荐）**
+**从 npm 装**
+
+```bash
+dsh plugin --profile web add dsh-copyright-kit
+```
+
+**从 GitHub 装**
 
 ```bash
 dsh plugin --profile web add github:Lucky020/dsh-copyright-kit
