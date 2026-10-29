@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1 — 2026-10-29
+
+### Added
+- 页码位置可配置：`--page-number top|bottom`，spec 支持 `page_number`。
+  默认 `top`（页眉右上角，符合登记规范）；`bottom` 为页脚居中。
+
 ## 0.6.0 — 2026-10-29
 
 ### Added

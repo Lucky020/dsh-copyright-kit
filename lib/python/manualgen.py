@@ -52,7 +52,7 @@ def set_east_asian(style_or_run, font_name: str, size_pt: float | None = None, b
     rfonts.set(qn("w:hAnsi"), "Times New Roman" if font_name == "宋体" else font_name)
 
 
-def page_field(paragraph) -> None:
+def page_field(paragraph, size_pt: float = 10.5) -> None:
     fld = OxmlElement("w:fldSimple")
     fld.set(qn("w:instr"), " PAGE ")
     run = OxmlElement("w:r")
@@ -62,7 +62,7 @@ def page_field(paragraph) -> None:
     rfonts.set(qn("w:hAnsi"), "宋体")
     rpr.append(rfonts)
     sz = OxmlElement("w:sz")
-    sz.set(qn("w:val"), "18")  # 9pt
+    sz.set(qn("w:val"), str(int(size_pt * 2)))
     rpr.append(sz)
     run.append(rpr)
     t = OxmlElement("w:t")
@@ -85,7 +85,8 @@ def toc_field(paragraph) -> None:
         run._r.append(node)
 
 
-def setup(doc: Document, header_left: str, hide_first_header: bool = False) -> None:
+def setup(doc: Document, header_left: str, hide_first_header: bool = False,
+          page_number: str = "bottom") -> None:
     sec = doc.sections[0]
     if hide_first_header:
         # 封面不显示页眉页码：首页页眉单独留空
@@ -99,9 +100,20 @@ def setup(doc: Document, header_left: str, hide_first_header: bool = False) -> N
     hp.style = doc.styles["Normal"]
     hp.paragraph_format.tab_stops.clear_all()
     hp.paragraph_format.tab_stops.add_tab_stop(Cm(14.66), WD_TAB_ALIGNMENT.RIGHT)
-    run = hp.add_run(f"{header_left}\t")
-    set_east_asian(run, "宋体", 9)
-    page_field(hp)
+    if page_number == "bottom":
+        # 页眉只放软件名与版本号，页码放到页脚居中
+        run = hp.add_run(header_left)
+        set_east_asian(run, "宋体", 9)
+        sec.footer_distance = Cm(1.5)
+        fp = sec.footer.paragraphs[0]
+        fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        fp.paragraph_format.first_line_indent = Pt(0)
+        page_field(fp, 10.5)
+    else:
+        hp.paragraph_format.tab_stops.add_tab_stop(Cm(14.66), WD_TAB_ALIGNMENT.RIGHT)
+        run = hp.add_run(f"{header_left}\t")
+        set_east_asian(run, "宋体", 9)
+        page_field(hp, 9)
 
     normal = doc.styles["Normal"]
     set_east_asian(normal, "宋体", BODY_PT)
@@ -334,6 +346,8 @@ def main() -> int:
     ap.add_argument("--spec", required=True, help="UTF-8 JSON 说明文件")
     ap.add_argument("--out", required=True)
     ap.add_argument("--append", help="追加的章节 JSON（例如 codeextract.py 生成的附录）")
+    ap.add_argument("--page-number", choices=["bottom", "top"], default="top",
+                    help="页码位置：top=页眉右上角（规范写法，默认），bottom=页脚居中")
     args = ap.parse_args()
 
     spec_path = Path(args.spec).expanduser().resolve()
@@ -366,7 +380,9 @@ def main() -> int:
         return 3
 
     doc = Document()
-    setup(doc, f"{name}  {version}", hide_first_header=bool(spec.get("cover", True)))
+    page_number = str(spec.get("page_number") or args.page_number or "top")
+    setup(doc, f"{name}  {version}", hide_first_header=bool(spec.get("cover", True)),
+          page_number=page_number)
 
     developer = str(spec.get("developer") or "").strip()
     date_text = str(spec.get("date") or "").strip()

@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 from docx import Document
-from docx.enum.text import WD_LINE_SPACING, WD_TAB_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING, WD_TAB_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
@@ -167,7 +167,7 @@ def header_run(paragraph, text: str) -> None:
     rfonts.set(qn("w:eastAsia"), "宋体")
 
 
-def page_field(paragraph) -> None:
+def page_field(paragraph, size_pt: float = FONT_SIZE_PT) -> None:
     fld = OxmlElement("w:fldSimple")
     fld.set(qn("w:instr"), " PAGE ")
     run = OxmlElement("w:r")
@@ -177,7 +177,7 @@ def page_field(paragraph) -> None:
         rfonts.set(qn(attr), "Consolas")
     rpr.append(rfonts)
     sz = OxmlElement("w:sz")
-    sz.set(qn("w:val"), str(FONT_SIZE_PT * 2))
+    sz.set(qn("w:val"), str(int(size_pt * 2)))
     rpr.append(sz)
     run.append(rpr)
     t = OxmlElement("w:t")
@@ -187,7 +187,7 @@ def page_field(paragraph) -> None:
     paragraph._p.append(fld)
 
 
-def build(lines: list[str], name: str, version: str, out: Path) -> None:
+def build(lines: list[str], name: str, version: str, out: Path, page_number: str = "top") -> None:
     doc = Document()
     sec = doc.sections[0]
     sec.page_width, sec.page_height = Cm(21.0), Cm(29.7)
@@ -198,9 +198,16 @@ def build(lines: list[str], name: str, version: str, out: Path) -> None:
     hp = sec.header.paragraphs[0]
     hp.style = doc.styles["Normal"]
     hp.paragraph_format.tab_stops.clear_all()
-    hp.paragraph_format.tab_stops.add_tab_stop(Cm(16.9), WD_TAB_ALIGNMENT.RIGHT)
-    header_run(hp, f"{name}  {version}\t")
-    page_field(hp)
+    if page_number == "bottom":
+        header_run(hp, f"{name}  {version}")
+        sec.footer_distance = Cm(1.5)
+        fp = sec.footer.paragraphs[0]
+        fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        page_field(fp, 9)
+    else:
+        hp.paragraph_format.tab_stops.add_tab_stop(Cm(16.9), WD_TAB_ALIGNMENT.RIGHT)
+        header_run(hp, f"{name}  {version}\t")
+        page_field(hp)
 
     style = doc.styles["Normal"]
     style.font.name = "Consolas"
@@ -241,6 +248,7 @@ def main() -> int:
     ap.add_argument("--version", default="V1.0")
     ap.add_argument("--out", required=True)
     ap.add_argument("--exclude", action="append", default=[])
+    ap.add_argument("--page-number", choices=["bottom", "top"], default="top")
     args = ap.parse_args()
 
     root = Path(args.root).expanduser().resolve()
@@ -256,7 +264,7 @@ def main() -> int:
     lines, mode = pick(all_lines)
     pages = (len(lines) + LINES_PER_PAGE - 1) // LINES_PER_PAGE
     out = Path(args.out).expanduser().resolve()
-    build(lines, args.name, args.version, out)
+    build(lines, args.name, args.version, out, args.page_number)
 
     print(f"files   : {len(files)}")
     print(f"lines   : {len(all_lines)} total -> {len(lines)} submitted ({mode})")
