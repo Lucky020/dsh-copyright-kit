@@ -1,0 +1,39 @@
+{
+  "name": "dsh-copyright-kit",
+  "version": "0.2.0",
+  "description": "软著工坊：把代码仓库变成软件著作权登记材料（源程序鉴别材料 60 页 / 软件说明书排版）。Copyright registration kit for DeepSeek Harness.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node test/smoke.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "copyright",
+    "software-copyright",
+    "软著"
+  ],
+  "license": "MIT"
+}
