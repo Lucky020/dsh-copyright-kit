@@ -220,6 +220,16 @@ def add_image(doc, path: Path, caption: str, index: int) -> bool:
     return True
 
 
+TEXT_WIDTH_CM = 21.0 - 3.17 * 2
+COLUMN_RATIOS = {
+    2: [0.32, 0.68],
+    3: [0.24, 0.18, 0.58],
+    4: [0.10, 0.13, 0.39, 0.38],
+    5: [0.09, 0.09, 0.28, 0.27, 0.27],
+    6: [0.08, 0.09, 0.18, 0.18, 0.20, 0.27],
+}
+
+
 def add_table(doc, spec: dict) -> int:
     header = spec.get("header") or []
     rows = spec.get("rows") or []
@@ -229,6 +239,17 @@ def add_table(doc, spec: dict) -> int:
     table = doc.add_table(rows=0, cols=cols)
     table.style = "Table Grid"
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = False
+    ratios = COLUMN_RATIOS.get(cols) or [1 / cols] * cols
+    widths = [Cm(TEXT_WIDTH_CM * r) for r in ratios]
+    layout = OxmlElement("w:tblLayout")
+    layout.set(qn("w:type"), "fixed")
+    table._tbl.tblPr.append(layout)
+    tbl_w = OxmlElement("w:tblW")
+    tbl_w.set(qn("w:type"), "dxa")
+    tbl_w.set(qn("w:w"), str(int(TEXT_WIDTH_CM * 567)))  # cm -> twips
+    table._tbl.tblPr.append(tbl_w)
+
     if header:
         cells = table.add_row().cells
         for i, text in enumerate(header[:cols]):
@@ -236,10 +257,12 @@ def add_table(doc, spec: dict) -> int:
             run = cells[i].paragraphs[0].add_run(str(text))
             set_east_asian(run, "黑体", 10.5, True)
             cells[i].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            cells[i].width = widths[i]
     for row in rows:
         cells = table.add_row().cells
         for i, text in enumerate(row[:cols]):
             cells[i].text = ""
+            cells[i].width = widths[i]
             run = cells[i].paragraphs[0].add_run(str(text))
             set_east_asian(run, "宋体", 10.5)
     doc.add_paragraph().paragraph_format.space_after = Pt(6)
@@ -263,7 +286,14 @@ def main() -> int:
     if args.append:
         try:
             extra = json.loads(Path(args.append).expanduser().read_text(encoding="utf-8"))
-            spec.setdefault("sections", []).extend(extra.get("sections") or [])
+            added = extra.get("sections") or []
+            if added and (added[0].get("level") or 1) != 1:
+                added = [{
+                    "heading": "附录",
+                    "level": 1,
+                    "paragraphs": ["本节表格由源代码自动导出，可与随附的源程序文档相互核对。"],
+                }] + added
+            spec.setdefault("sections", []).extend(added)
         except (OSError, json.JSONDecodeError) as exc:
             print(f"附录读取失败：{exc}", file=sys.stderr)
             return 4

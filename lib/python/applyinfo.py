@@ -197,7 +197,8 @@ def guess_domain(name: str, spec: dict, headings: list[str]) -> str:
 DOC_HEADINGS = {
     "引言", "编写目的", "适用范围", "术语与缩略语", "系统概述", "系统定位", "用户角色",
     "运行环境", "功能说明", "操作说明", "登录与退出", "典型业务操作", "异常处理",
-    "技术特点", "部署说明", "维护说明", "附录",
+    "技术特点", "部署说明", "维护说明", "附录", "功能构成", "主要数据表", "权限模型",
+    "权限分配", "越权防护", "设计原则", "部署步骤", "备份策略", "日志与监控",
 }
 
 
@@ -247,6 +248,7 @@ def main() -> int:
     ap.add_argument("--domain")
     ap.add_argument("--developer", default="待填写")
     ap.add_argument("--exclude", action="append", default=[])
+    ap.add_argument("--published", default="", help="首次发表日期；留空则填「待填写」")
     args = ap.parse_args()
 
     root = Path(args.root).expanduser().resolve()
@@ -284,6 +286,8 @@ def main() -> int:
         warnings.append("仓库没有 git 历史，开发完成日期与源程序量需人工确认")
     if len(summary) > 300:
         warnings.append(f"功能简介草稿 {len(summary)} 字，超过 300 字上限，请压缩")
+    if not args.published:
+        warnings.append("首次发表日期未提供，已填「待填写」——未发表请注明「未发表」")
     if not frameworks:
         warnings.append("未从依赖清单识别出框架，开发软件环境请人工补充")
     warnings.append("功能简介是模板草稿（按模块名拼接），提交前请按真实业务改写成通顺的一句话概括")
@@ -299,7 +303,7 @@ def main() -> int:
         "版本号": args.version,
         "著作权人": args.developer,
         "开发完成日期": git["last_commit"] or "待填写",
-        "首次发表日期": "未发表",
+        "首次发表日期": args.published or "待填写",
         "开发方式": "独立开发",
         "权利取得方式": "原始取得",
         "软件分类": "应用软件",

@@ -94,8 +94,24 @@ def skipped(path: Path, root: Path, excludes: tuple[str, ...]) -> bool:
     return any(ex and ex in posix for ex in excludes)
 
 
+PRIORITY_DIRS = (
+    ("app/", 0), ("src/", 0), ("frontend/src/", 0), ("internal/", 0), ("cmd/", 0),
+    ("frontend/", 1), ("web/", 1), ("server/", 1),
+    ("alembic/", 8), ("migrations/", 8), ("scripts/", 9), ("tools/", 9), ("docker/", 9),
+)
+
+
+def _priority(rel: str) -> int:
+    for prefix, rank in PRIORITY_DIRS:
+        if rel.startswith(prefix):
+            return rank
+    return 5
+
+
 def collect(root: Path, excludes: tuple[str, ...]) -> tuple[list[str], list[str]]:
-    files = sorted(p for p in root.rglob("*") if p.is_file() and not skipped(p, root, excludes))
+    picked = [p for p in root.rglob("*") if p.is_file() and not skipped(p, root, excludes)]
+    # 业务代码排前面：软著前 30 页应当是可读的业务实现，而不是迁移脚本
+    files = sorted(picked, key=lambda p: (_priority(p.relative_to(root).as_posix()), p.relative_to(root).as_posix()))
     lines: list[str] = []
     used: list[str] = []
     for path in files:
