@@ -26,9 +26,8 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
 BODY_PT = 12          # 小四
-BODY_LINE = 1.25      # 1.25 倍行距：保证每页 ≥30 行
+BODY_LINE = 1.2       # 1.2 倍行距：保证每页 ≥30 行
 H1_PT, H2_PT, H3_PT = 16, 14, 12
-BODY_LINE = 1.5
 MAX_IMG_WIDTH_CM = 14.0
 
 
