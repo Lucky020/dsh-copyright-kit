@@ -26,6 +26,7 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
 BODY_PT = 12          # 小四
+BODY_LINE = 1.25      # 1.25 倍行距：保证每页 ≥30 行
 H1_PT, H2_PT, H3_PT = 16, 14, 12
 BODY_LINE = 1.5
 MAX_IMG_WIDTH_CM = 14.0
@@ -127,17 +128,24 @@ def setup(doc: Document, header_left: str, hide_first_header: bool = False,
     normal = doc.styles["Normal"]
     set_east_asian(normal, "宋体", BODY_PT)
     pf = normal.paragraph_format
-    pf.line_spacing_rule = WD_LINE_SPACING.ONE_POINT_FIVE
+    pf.line_spacing = BODY_LINE
+    pf.line_spacing_rule = WD_LINE_SPACING.MULTIPLE
     pf.space_before = Pt(0)
-    pf.space_after = Pt(6)
+    pf.space_after = Pt(3)
     pf.first_line_indent = Pt(BODY_PT * 2)
+
+
+# 排版几何：A4 正文高度 700pt；单倍行高约 1.2 × 字号
+_TEXT_HEIGHT_PT = (29.7 - 2.54 * 2) / 2.54 * 72
+_LINE_HEIGHT_PT = BODY_PT * 1.2 * BODY_LINE
+LINES_PER_PAGE = max(20, int(_TEXT_HEIGHT_PT / _LINE_HEIGHT_PT))
 
 
 class Stats:
     """按 Word 的排版密度估算页数，用于提醒「篇幅不足」。"""
 
     CHARS_PER_LINE = 33
-    LINES_PER_PAGE = 30
+    LINES_PER_PAGE = LINES_PER_PAGE
 
     def __init__(self) -> None:
         self.chars = 0
@@ -183,8 +191,8 @@ def add_heading(doc, text: str, level: int, number: str, page_break_before: bool
     if page_break_before:
         pf.page_break_before = True
     pf.first_line_indent = Pt(0)
-    pf.space_before = Pt(12 if level == 1 else 8)
-    pf.space_after = Pt(6)
+    pf.space_before = Pt(8 if level == 1 else 5)
+    pf.space_after = Pt(3)
     pf.keep_with_next = True
     if level == 1:
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
