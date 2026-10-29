@@ -1,5 +1,11 @@
 # dsh-copyright-kit · 软著工坊
 
+[![npm version](https://img.shields.io/npm/v/dsh-copyright-kit.svg)](https://www.npmjs.com/package/dsh-copyright-kit)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-copyright-kit.svg)](https://www.npmjs.com/package/dsh-copyright-kit)
+[![license](https://img.shields.io/npm/l/dsh-copyright-kit.svg)](./LICENSE)
+[![node](https://img.shields.io/node/v/dsh-copyright-kit.svg)](./package.json)
+[![dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-6f42c1)](https://github.com/topics/dsh-plugin)
+
 把「一个代码仓库 + 一个软件名」变成软件著作权登记要交的材料。DeepSeek Harness 插件。
 
 ![运行总览](./demo/screens/01-总览-运行总览.png)
