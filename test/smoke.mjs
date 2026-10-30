@@ -38,6 +38,7 @@ await test_manual()
 await test_screens()
 await test_apply_info()
 await test_pack()
+await test_delivery()
 console.log('\n✓ smoke passed:', [...registered.keys()].join(', '))
 
 function test_registration() {
@@ -49,6 +50,7 @@ function test_registration() {
     [
       'copyright_apply_info', 'copyright_kit_status', 'copyright_manual',
       'copyright_pack', 'copyright_screens', 'copyright_source_doc',
+      'delivery_catalog', 'delivery_doc',
     ],
   )
 }
@@ -200,6 +202,45 @@ async function test_pack() {
   assert.deepEqual(kinds, ['apply_info', 'manual', 'source_doc'])
   assert.ok(existsSync(item.files.find((f) => f.kind === 'manual').path))
   console.log('  pack ok:', item.files.length, 'files')
+}
+
+async function test_delivery() {
+  const dir = workdir()
+  const repo = path.join(dir, 'repo')
+  mkdirSync(path.join(repo, 'app', 'models'), { recursive: true })
+  writeFileSync(path.join(repo, 'app', 'models', 'order.py'), [
+    'from sqlalchemy import Column, BigInteger, String, DateTime',
+    'from app.core.database import Base',
+    '',
+    'class Order(Base):',
+    '    __tablename__ = "orders"',
+    '    id = Column(BigInteger, primary_key=True)',
+    '    tenant_id = Column(BigInteger)',
+    '    order_no = Column(String(64))',
+    '    created_at = Column(DateTime)',
+  ].join('\n'))
+  writeFileSync(path.join(repo, 'requirements.txt'), 'fastapi\nsqlalchemy\npsycopg2\n')
+
+  const catalog = await registered.get('delivery_catalog').execute({ root: repo, software_name: '测试系统' })
+  assert.ok(catalog.docs.length >= 9, '目录应至少 9 份文档')
+  assert.equal(catalog.project.tables, 1)
+
+  const out = path.join(dir, 'out', '数据库设计文档.docx')
+  const doc = await registered.get('delivery_doc').execute({
+    doc_id: 'database', root: repo, software_name: '测试系统', out_path: out,
+  })
+  assert.ok(existsSync(out), '未生成数据库设计文档')
+  assert.equal(doc.tables, 1)
+  assert.ok(doc.sections > 20)
+
+  // 使用说明书：系统没跑时应给出补图提示，而不是编内容
+  const manual = await registered.get('delivery_doc').execute({
+    doc_id: 'user-manual', root: repo, software_name: '测试系统',
+    out_path: path.join(dir, 'out', '使用说明书.docx'),
+    base_url: 'http://127.0.0.1:59999',
+  })
+  assert.ok(manual.missing.some((m) => m.includes('未运行')), '应提示系统未运行')
+  console.log('  delivery ok:', catalog.docs.length, 'docs,', doc.sections, 'sections')
 }
 
 async function test_manual() {
