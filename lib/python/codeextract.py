@@ -34,7 +34,7 @@ FUNC_RE = re.compile(r"^\s*(?:async\s+)?def\s+(\w+)\s*\(")
 DOC_RE = re.compile(r'^\s*(?:"""|\'\'\')\s*(.+)$')
 MODEL_RE = re.compile(r"^class\s+(\w+)\s*\((.*?)\)\s*:", re.MULTILINE)
 TABLENAME_RE = re.compile(r'__tablename__\s*=\s*["\'](\w+)["\']')
-COLUMN_RE = re.compile(r"^\s+(\w+)\s*=\s*Column\(", re.MULTILINE)
+COLUMN_RE = re.compile(r"^\s+(\w+)\s*=\s*Column\(\s*([A-Za-z_][\w.]*)", re.MULTILINE)
 FIELD_RE = re.compile(r"^\s+(\w+)\s*=\s*models\.\w+Field\(", re.MULTILINE)
 
 
@@ -119,13 +119,14 @@ def scan_models(root: Path):
                 continue
             block = text[m.end(): m.end() + 4000]
             tname = TABLENAME_RE.search(block)
-            cols = COLUMN_RE.findall(block) or FIELD_RE.findall(block)
+            cols = COLUMN_RE.findall(block) or [(f, "") for f in FIELD_RE.findall(block)]
             if not tname and not cols:
                 continue
             models.append({
                 "class": cls,
                 "table": tname.group(1) if tname else cls.lower(),
-                "fields": cols,
+                "fields": [c[0] for c in cols],
+                "field_types": {c[0]: c[1] for c in cols if c[1]},
                 "file": p.relative_to(root).as_posix(),
             })
     # 同一张表可能在多个模块重复定义，按表名去重
@@ -202,6 +203,7 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--title", default="附录")
     ap.add_argument("--max-routes", type=int, default=DEFAULT_MAX_ROUTES)
+    ap.add_argument("--dump-models", help="把原始模型定义（表名/字段/类型）另存为 JSON")
     ap.add_argument("--model-detail-forms", type=int, default=0,
                     help="输出字段明细的表单数量；0 表示不输出（默认）")
     args = ap.parse_args()
@@ -302,6 +304,16 @@ def main() -> int:
     if not sections:
         print("没有识别到可导出的接口或数据表", file=sys.stderr)
         return 3
+
+    if args.dump_models:
+        dp = Path(args.dump_models).expanduser().resolve()
+        dp.parent.mkdir(parents=True, exist_ok=True)
+        dp.write_text(json.dumps({
+            "models": models,
+            "routes": [{"method": r["method"], "path": r["path"], "func": r["func"]} for r in routes],
+            "forms": [{"module": f["module"], "name": f["name"], "fields": f["fields"]} for f in forms],
+        }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"models dump: {dp}")
 
     payload = {"sections": sections}
     out = Path(args.out).expanduser().resolve()

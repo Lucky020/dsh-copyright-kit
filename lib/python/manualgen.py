@@ -261,7 +261,8 @@ COLUMN_RATIOS = {
 }
 
 
-def add_cover(doc, name: str, version: str, developer: str, date_text: str) -> None:
+def add_cover(doc, name: str, version: str, developer: str, date_text: str,
+              doc_title: str = "软 件 说 明 书") -> None:
     """封面：软件名称 + 版本号 + 文档类型 + 著作权人 + 日期。"""
     for _ in range(5):
         p = doc.add_paragraph()
@@ -277,7 +278,7 @@ def add_cover(doc, name: str, version: str, developer: str, date_text: str) -> N
     kind.alignment = WD_ALIGN_PARAGRAPH.CENTER
     kind.paragraph_format.first_line_indent = Pt(0)
     kind.paragraph_format.space_after = Pt(10)
-    set_east_asian(kind.add_run("软 件 说 明 书"), "黑体", 22, True)
+    set_east_asian(kind.add_run(doc_title), "黑体", 22, True)
 
     ver = doc.add_paragraph()
     ver.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -404,7 +405,8 @@ def main() -> int:
     developer = str(spec.get("developer") or "").strip()
     date_text = str(spec.get("date") or "").strip()
     if spec.get("cover", True):
-        add_cover(doc, name, version, developer, date_text)
+        add_cover(doc, name, version, developer, date_text,
+                  str(spec.get("doc_title") or "软 件 说 明 书"))
 
     if spec.get("toc", True):
         title = doc.add_paragraph()
