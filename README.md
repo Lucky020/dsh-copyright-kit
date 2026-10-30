@@ -1,7 +1,8 @@
 # dsh-copyright-kit · 软著工坊
 
 [![npm version](https://img.shields.io/npm/v/dsh-copyright-kit.svg)](https://www.npmjs.com/package/dsh-copyright-kit)
-[![npm downloads](https://img.shields.io/npm/dm/dsh-copyright-kit.svg)](https://www.npmjs.com/package/dsh-copyright-kit)
+[![last commit](https://img.shields.io/github/last-commit/Lucky020/dsh-copyright-kit)](https://github.com/Lucky020/dsh-copyright-kit/commits/main)
+[![github stars](https://img.shields.io/github/stars/Lucky020/dsh-copyright-kit?style=social)](https://github.com/Lucky020/dsh-copyright-kit/stargazers)
 [![license](https://img.shields.io/npm/l/dsh-copyright-kit.svg)](./LICENSE)
 [![node](https://img.shields.io/node/v/dsh-copyright-kit.svg)](./package.json)
 [![dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-6f42c1)](https://github.com/topics/dsh-plugin)

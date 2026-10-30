@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.5 — 2026-10-30
+
+### Docs
+- README 去掉下载量徽章（npm 无统计数据时显示红字「package not found or too new」），
+  换成最近提交与 Star 徽章。
+
 ## 0.7.4 — 2026-10-29
 
 ### Fixed
